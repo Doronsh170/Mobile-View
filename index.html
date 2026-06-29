@@ -302,7 +302,29 @@ body.light .dataModes button.active{
 .relStatus.lagging{background:#7f1d1d}
 body.light .relStatus{color:#ffffff}
 
-</style></head><body><header><h1>Momentum Desk</h1><div class="sub">מפת סקטורים ותתי־סקטורים למניות וול סטריט</div></header><main><section id="hero" class="hero"></section><section class="searchBox"><div class="searchLabel">חיפוש מניה</div><div class="search"><div class="searchWrap"><input id="symbolInput" class="symbol" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" value="" placeholder=""/><div id="suggestions" class="suggestions"></div></div><button id="findBtn" class="primary">בדוק</button></div><div id="autoStatus" class="status">אוטומטי כבוי</div><div class="toolbar topActions"><button id="refreshBtn" class="good">רענן עכשיו</button><button id="autoBtn">אוטומטי 30 שניות</button><button id="themeBtn" class="themeBtn">רקע בהיר</button><span id="lastUpdate" class="status">עדיין לא עודכן</span></div></section>
+
+#preMarketBtn{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  color:#ffffff !important;
+  font-weight:900 !important;
+}
+#preMarketBtn.active{
+  background:#2563eb !important;
+  border-color:#60a5fa !important;
+  color:#ffffff !important;
+}
+body.light #preMarketBtn{
+  background:#1e293b !important;
+  border-color:#334155 !important;
+  color:#ffffff !important;
+}
+body.light #preMarketBtn.active{
+  background:#2563eb !important;
+  border-color:#1d4ed8 !important;
+}
+
+</style></head><body><header><h1>Momentum Desk</h1><div class="sub">מפת סקטורים ותתי־סקטורים למניות וול סטריט</div></header><main><section id="hero" class="hero"></section><section class="searchBox"><div class="searchLabel">חיפוש מניה</div><div class="search"><div class="searchWrap"><input id="symbolInput" class="symbol" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" value="" placeholder=""/><div id="suggestions" class="suggestions"></div></div><button id="findBtn" class="primary">בדוק</button></div><div id="autoStatus" class="status">אוטומטי כבוי</div><div class="toolbar topActions"><button id="refreshBtn" class="good">רענן עכשיו</button><button id="autoBtn">אוטומטי 30 שניות</button><button id="themeBtn" class="themeBtn">רקע בהיר</button><button id="preMarketBtn" type="button" onclick="togglePreMarket()">הפעל טרום מסחר</button><span id="lastUpdate" class="status">עדיין לא עודכן</span></div></section>
 <section id="selectedHeader" class="selectedHeader hidden"></section>
 <div id="notice" class="notice"></div><section class="box decision"><h2>מצב עכשיו</h2><div class="line"><span class="label">מובילה בקבוצה</span><span id="leaderVal" class="val wait">מחכה</span></div><div class="line"><span class="label">חלשה יחסית</span><span id="laggardVal" class="val wait">מחכה</span></div><div class="line"><span class="label">המניה מול הקבוצה</span><span id="targetVal" class="val wait">מחכה</span></div></section><section class="box" id="peerToggleBox"><button id="togglePeersBtn" class="primary fullBtn">פתח את כל המניות בקבוצה</button></section><section class="box hidden" id="peerBox"><div class="peerHead"><h2>קבוצת השוואה</h2><span id="peerCount" class="count"></span></div><div id="peers" class="peers"></div></section><details><summary>עוד / גשר נתונים</summary><div class="toolbar"><input id="apiKey" class="api" type="password" placeholder="Finnhub API key, אופציונלי לגיבוי"/><a class="apiLink" target="_blank" rel="noopener" href="https://finnhub.io/">Finnhub לגיבוי</a><button id="saveKeyBtn">שמור API</button><button id="clearKeyBtn" class="danger">מחק API</button><button id="clearDataBtn" class="danger">נקה נתונים</button></div><div class="bridgeNote">מקור ברירת המחדל: Yahoo Finance Bridge. מפתח Finnhub הוא אופציונלי לגיבוי בלבד.</div><div id="log" class="log"></div></details><section class="legalBox">
   <strong class="legalTitle">גילוי נאות</strong> המידע באתר נועד לסידור, סיווג והשוואה ראשונית של מניות לפי סקטורים ותתי־סקטורים בלבד. אין לראות בו ייעוץ השקעות, המלצה לקנייה או מכירה, או תחליף לשיקול דעת עצמאי.
@@ -341,10 +363,14 @@ function renderTable(){let e=document.getElementById("rows");if(!e)return;e.inne
 function render(){renderHero();renderSelectedHeader();renderPeers();renderDecision();renderTable();updateAuto();updateDataModeButtons()}
 function key(){return(document.getElementById("apiKey").value||localStorage.getItem(KEY)||"").trim()}
 
-function effectivePhase(){return "regular"}
-function dataModeLabel(p){let s=nyPhase();if(s==="regular")return "מסחר פעיל";if(s==="pre")return "טרום מסחר · נתון רגיל אחרון";if(s==="after")return "מסחר מאוחר · נתון רגיל אחרון";return "שוק סגור · נתון מסחר רגיל אחרון"}
-function setDataMode(p){dataMode="regular";render();setTimeout(()=>fetchGroup("mode"),50)}
-function updateDataModeButtons(){}
+
+
+function effectivePhase(){return dataMode==="pre"?"pre":"regular"}
+function dataModeLabel(p){if(dataMode==="pre")return "טרום מסחר · מנוטרל שינוי יום קודם";let s=nyPhase();if(s==="regular")return "מסחר פעיל";if(s==="pre")return "טרום מסחר · נתון רגיל אחרון";if(s==="after")return "מסחר מאוחר · נתון רגיל אחרון";return "שוק סגור · נתון מסחר רגיל אחרון"}
+function togglePreMarket(){dataMode=dataMode==="pre"?"regular":"pre";abortFetch();quotes={};hist={};localStorage.removeItem(QS);localStorage.removeItem(HS);lastFetchMs=0;localStorage.removeItem(LTS);updatePreMarketButton();render();setTimeout(()=>fetchGroup("pre-toggle"),50)}
+function setDataMode(p){dataMode=p==="pre"?"pre":"regular";updatePreMarketButton();render();setTimeout(()=>fetchGroup("mode"),50)}
+function updateDataModeButtons(){updatePreMarketButton()}
+function updatePreMarketButton(){let b=document.getElementById("preMarketBtn");if(!b)return;b.classList.toggle("active",dataMode==="pre");b.textContent=dataMode==="pre"?"כבה טרום מסחר":"הפעל טרום מסחר"}
 function nyPhase(){let parts=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());let m=Object.fromEntries(parts.map(p=>[p.type,p.value]));let wd=m.weekday,min=(+m.hour)*60+(+m.minute);if(wd==="Sat"||wd==="Sun")return"closed";if(min>=240&&min<570)return"pre";if(min>=570&&min<960)return"regular";if(min>=960&&min<1200)return"after";return"closed"}
 const YAHOO_WORKER_BASE="https://momentum-yahoo-prices.sh6doron.workers.dev/";
 function srcLabel(src){return src==="finnhub"?"Finnhub · fallback":src==="worker-regular"?"Yahoo Worker · regular / last":src==="worker-pre"?"Yahoo Worker · pre-market":src==="worker-after"?"Yahoo Worker · after-hours":src==="worker-closed"?"Yahoo Worker · last available":src==="finnhub-last"?"Finnhub · fallback":""}
@@ -356,29 +382,28 @@ async function finnhubOne(a,k,sig){let url=`https://finnhub.io/api/v1/quote?symb
 async function fetchJson(url,sig,label){let timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+" timeout")),6000));let res=await Promise.race([fetch(url,{signal:sig,cache:"no-store"}),timeout]);if(!res.ok)throw new Error(label+" HTTP "+res.status);return await res.json()}
 function yahooSymbol(a){return(a.tvSymbol||a.ticker).replace(/^NASDAQ:/,"").replace(/^NYSE:/,"").replace(/^AMEX:/,"").replace(/\./g,"-")}
 
+
+
+
 function pickYahooPrice(d,phase){
   let regular=+d.regularMarketPrice;
   let previous=+d.previousClose;
   let generic=+d.price;
   let pre=+d.preMarketPrice;
-  let after=+d.postMarketPrice;
+
   if(phase==="pre"){
-    let p=Number.isFinite(pre)&&pre>0?pre:null;
-    let pc=Number.isFinite(previous)&&previous>0?previous:regular;
+    let p=Number.isFinite(pre)&&pre>0?pre:(Number.isFinite(generic)&&generic>0?generic:null);
+    let pc=Number.isFinite(regular)&&regular>0?regular:null;
     return{p,pc}
   }
-  if(phase==="after"){
-    let p=Number.isFinite(after)&&after>0?after:null;
-    let pc=Number.isFinite(regular)&&regular>0?regular:previous;
-    return{p,pc}
-  }
+
   let p=Number.isFinite(regular)&&regular>0?regular:generic;
   let pc=Number.isFinite(previous)&&previous>0?previous:null;
   return{p,pc}
 }
 
-async function workerOne(a,phase,sig){let ysym=yahooSymbol(a);let url=YAHOO_WORKER_BASE+`?symbol=${encodeURIComponent(ysym)}&_=${Date.now()}`;let d=await fetchJson(url,sig,"Yahoo Worker");let picked=pickYahooPrice(d,phase),p=picked.p,pc=picked.pc,t=+d.time;if(!Number.isFinite(p)||p===0)throw new Error(phase==="pre"?"אין נתון טרום מסחר נפרד":"אין נתון מסחר מאוחר נפרד");if(!freshExtendedTs(t,phase))throw new Error("Yahoo stale / no extended trade at "+nyStamp(t));quotes[a.ticker]={c:p,pc:Number.isFinite(pc)&&pc!==0?pc:null,t:Number.isFinite(t)?t:Math.floor(Date.now()/1000),src:srcLabel(phase==="pre"?"worker-pre":phase==="after"?"worker-after":phase==="regular"?"worker-regular":"worker-closed"),mode:phase};addHist(a.ticker,p);return"worker"}
-async function one(a,k,sig,phase){try{return await workerOne(a,phase,sig)}catch(e){log(a.ticker+": "+e.message+", Yahoo bridge failed");if(phase!=="regular")throw e;if(k){log(a.ticker+": fallback to Finnhub");await finnhubOne(a,k,sig);quotes[a.ticker].src=srcLabel("finnhub-last");return"fallback"}throw e}}
+async function workerOne(a,phase,sig){let ysym=yahooSymbol(a);let url=YAHOO_WORKER_BASE+`?symbol=${encodeURIComponent(ysym)}&_=${Date.now()}`;let d=await fetchJson(url,sig,"Yahoo Worker");let picked=pickYahooPrice(d,phase),p=picked.p,pc=picked.pc,t=+d.time;if(!Number.isFinite(p)||p===0||phase==="pre"&&(!Number.isFinite(pc)||pc===0))throw new Error(phase==="pre"?"אין נתון טרום/סגירה רגילה זמין":"Worker no price");if(!freshExtendedTs(t,phase))throw new Error("Yahoo stale / no extended trade at "+nyStamp(t));quotes[a.ticker]={c:p,pc:Number.isFinite(pc)&&pc!==0?pc:null,t:Number.isFinite(t)?t:Math.floor(Date.now()/1000),src:srcLabel(phase==="pre"?"worker-pre":phase==="after"?"worker-after":phase==="regular"?"worker-regular":"worker-closed"),mode:phase};addHist(a.ticker,p);return"worker"}
+async function one(a,k,sig,phase){try{return await workerOne(a,phase,sig)}catch(e){log(a.ticker+": "+e.message+", Yahoo bridge failed");if(phase==="pre")throw e;if(k){log(a.ticker+": fallback to Finnhub");await finnhubOne(a,k,sig);quotes[a.ticker].src=srcLabel("finnhub-last");quotes[a.ticker].mode=phase;return"fallback"}throw e}}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function fetchListForPhase(phase){let list=assets();let max=30,arr=[];if(ticker){let hit=list.find(x=>x.ticker===ticker);if(hit)arr.push(hit)}for(let a of list){if(arr.length>=max)break;if(!arr.some(x=>x.ticker===a.ticker))arr.push(a)}return arr}
 async function fetchGroup(src="auto"){if(busy){if(src==="auto")return;abortFetch();await sleep(80)}let k=key();let phase=effectivePhase();busy=true;ctrl=new AbortController();let myRun=++runSeq;let fetchTheme=theme;let b=document.getElementById("refreshBtn");b.disabled=true;b.classList.add("loading");b.textContent="מרענן";let ok=0,fail=0,list=fetchListForPhase(phase);log(`Start phase=${phase} group=${fetchTheme} symbols=${list.length}`);try{for(let a of list){if(myRun!==runSeq)return;try{await one(a,k,ctrl.signal,phase);ok++;if(myRun!==runSeq)return;render();await sleep(phase==="regular"?120:220)}catch(e){if(String(e.message).includes("AbortError")||String(e.message).includes("aborted"))return;fail++;log(a.ticker+": "+e.message);if(String(e.message).includes("429"))break}}if(myRun!==runSeq)return;save(QS,quotes);save(HS,hist);lastFetchMs=Date.now();save(LTS,lastFetchMs);let tm=new Date().toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit",second:"2-digit"});let label=dataModeLabel(phase);document.getElementById("lastUpdate").textContent="עודכן: "+tm+" · "+label+" · "+fetchTheme;log(`Done phase=${phase} group=${fetchTheme} ok=${ok} fail=${fail}`);if(phase!=="regular"&&assets().length>30)note("מחוץ לשעות המסחר עודכנו עד 30 מניות בקבוצה כדי לא להיחסם") }finally{if(myRun===runSeq){busy=false;ctrl=null;b.disabled=false;b.classList.remove("loading");b.textContent="רענן עכשיו";render()}}}
@@ -392,6 +417,6 @@ function copyTV(){navigator.clipboard.writeText(assets().map(a=>a.tvSymbol).join
 function clearData(){stopAuto();abortFetch();quotes={};hist={};localStorage.removeItem(QS);localStorage.removeItem(HS);localStorage.removeItem(LTS);lastFetchMs=0;localStorage.removeItem("momentum_desk_ticker_v20");ticker="";peersOpen=false;let i=document.getElementById("symbolInput");if(i)i.value="";let last=document.getElementById("lastUpdate");if(last)last.textContent="עדיין לא עודכן";render();note("הנתונים נוקו")}
 function applyTheme(){let mode=localStorage.getItem("momentum_desk_theme_mode_v20")||"dark";document.body.classList.toggle("light",mode==="light");let b=document.getElementById("themeBtn");if(b)b.textContent=mode==="light"?"רקע כהה":"רקע בהיר"}
 function toggleTheme(){let mode=localStorage.getItem("momentum_desk_theme_mode_v20")||"dark";localStorage.setItem("momentum_desk_theme_mode_v20",mode==="light"?"dark":"light");applyTheme()}
-function init(){localStorage.setItem("momentum_desk_data_mode_v20","regular");applyTheme();localStorage.removeItem("momentum_desk_ticker_v20");ticker="";peersOpen=false;document.getElementById("apiKey").value=localStorage.getItem(KEY)||"";document.getElementById("symbolInput").value="";document.getElementById("symbolInput").addEventListener("keydown",e=>{if(e.key==="Enter")find();if(e.key==="Escape")closeSuggestions()});document.getElementById("symbolInput").addEventListener("input",renderSuggestions);document.getElementById("symbolInput").addEventListener("focus",renderSuggestions);document.addEventListener("click",e=>{if(!e.target.closest(".searchWrap"))closeSuggestions()});document.getElementById("findBtn").onclick=find;document.getElementById("refreshBtn").onclick=()=>fetchGroup("manual");document.getElementById("autoBtn").onclick=toggleAuto;document.getElementById("themeBtn").onclick=toggleTheme;document.getElementById("saveKeyBtn").onclick=saveKey;document.getElementById("clearKeyBtn").onclick=clearKey;document.getElementById("clearDataBtn").onclick=clearData;document.getElementById("togglePeersBtn").onclick=togglePeers;setTimeout(()=>{let i=document.getElementById("symbolInput");if(i)i.value="";ticker="";peersOpen=false;render()},0);render();if(false&&key()&&ticker){startAuto();fetchGroup("init")}}
+function init(){localStorage.removeItem("momentum_desk_pre_market_on_v20");dataMode="regular";applyTheme();localStorage.removeItem("momentum_desk_ticker_v20");ticker="";peersOpen=false;document.getElementById("apiKey").value=localStorage.getItem(KEY)||"";document.getElementById("symbolInput").value="";document.getElementById("symbolInput").addEventListener("keydown",e=>{if(e.key==="Enter")find();if(e.key==="Escape")closeSuggestions()});document.getElementById("symbolInput").addEventListener("input",renderSuggestions);document.getElementById("symbolInput").addEventListener("focus",renderSuggestions);document.addEventListener("click",e=>{if(!e.target.closest(".searchWrap"))closeSuggestions()});document.getElementById("findBtn").onclick=find;document.getElementById("refreshBtn").onclick=()=>fetchGroup("manual");document.getElementById("autoBtn").onclick=toggleAuto;document.getElementById("themeBtn").onclick=toggleTheme;document.getElementById("saveKeyBtn").onclick=saveKey;document.getElementById("clearKeyBtn").onclick=clearKey;document.getElementById("clearDataBtn").onclick=clearData;document.getElementById("togglePeersBtn").onclick=togglePeers;setTimeout(()=>{let i=document.getElementById("symbolInput");if(i)i.value="";ticker="";peersOpen=false;render()},0);render();if(false&&key()&&ticker){startAuto();fetchGroup("init")}}
 init();
 </script></body></html>
